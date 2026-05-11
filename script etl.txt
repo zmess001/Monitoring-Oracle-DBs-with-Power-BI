@@ -1,0 +1,2526 @@
+import oracledb
+import psycopg2
+from contextlib import closing
+
+oracle_connections = [
+    {
+        "host": "localhost",
+        "port": 1521,
+        "service_name": "FREEPDB1",
+        "user": "mydbuser",
+        "password": "zmess"
+    },
+    {
+        "host": "localhost",
+        "port": 1522,
+        "service_name": "FREEPDB1",
+        "user": "mydbuser",
+        "password": "OraclePass123"
+    }
+]
+
+pg_config = {
+    "dbname": "mydblink",
+    "user": "postgres",
+    "password": "zmess",
+    "host": "localhost",
+    "port": "5432"
+}
+
+def fetch_all(cursor, query):
+    cursor.execute(query)
+    columns = [desc[0].lower() for desc in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+with closing(psycopg2.connect(**pg_config)) as pg_conn:
+    with pg_conn.cursor() as pg_cursor:
+
+        print("🪩 Resetting PostgreSQL tables...")
+
+        # Adjust these lists as needed if you add CheckDataBaseInfoTable or others
+        tables_to_clear = [
+            "TBMONITORWORKLOAD",
+            "TBMonitorServicePackTable",
+            "HWM_LOG",
+            "TBMonitorBatchRequestTable",
+            "AlertStatusServiceOracleTable",
+            "TopQueryPerformanceLog",
+            "JobStatus",
+            "ServiceStatus",
+            "BackupHistory",
+            "BackupsDetails",
+            "LockTypes",
+            "UndoUsageSessions",
+            "UsageTempTables",
+            "SQLConfigurationTable",
+            "ActivityMonitorProcesses",
+            "deadlock_reports",
+            "ActiveTransactionsInfo",
+            "IndexesInfo",
+            "TablesInfo",
+            "TransactionLogsTableInfo",
+            "TBMonitorBackupStatus",
+            "LogFilesTableInfo",
+            "DataFilesTableInfo",
+            "DatabasesTableInfo",
+            "TBMonitorMemory",
+            "TBMonitorCpuUsage",
+            "TBMonitorCPU",
+            "TBMonitorAudit",
+            "StatusServiceSQLTable",
+            "TBMonitorSqlCompilationTable",
+            "Region",
+            "QueryBydurationTable",
+            "TBMonitorBlocsTable",
+            "TBMonitorNbrUserRunningDB",
+            "TBMonitorLatchWaitsPerSecondTable",
+            "TBMonitorFullScanTable",
+            "TBMonitorFailedJobsTable",
+            "TBMonitorErrorLogTable",
+            "detailSessionTable",
+            "TBMonitorCollecteStatisticsTable",
+            "TBMonitorCollecteFragmentationTable",
+            "TBMonitorCollecteDiskDB",
+            "TBMonitorCheckUserConection",
+            "TBMonitorTopLogicalPhysicalRead",
+            "TBMonitorTopCPU",
+            "TBMonitorLockWait",
+            "checklogspaceusedinpourcentagetable",
+            "tbMonitorchecklatencydisktable",
+            "tbmonitorlatchwait",
+            "tbmonitorcheckbuffercatchhitratio",
+            "tbmonitoraveragewaittimetable",
+            "tbtaskmonitoringstatus",
+            "datafiles",
+            "tablespaceinfo",
+            "checkdatabaseinfotable",
+            "checkdataspaceusedinpourcentagetable",   
+            "databases",
+            "oraclesidtable",
+            "servers"
+        ]
+
+        sequences_to_reset = [
+            "tbmonitorworkload_id_seq",
+            "tbmonitorservicepacktable_id_seq",
+            "hwm_log_id_seq",
+            "tbmonitorbatchrequesttable_id_seq",
+            "alertstatusserviceoracletable_id_seq",
+            "topqueryperformancelog_id_seq",
+            "jobstatus_id_seq",
+            "servicestatus_id_seq",
+            "backuphistory_id_seq",
+            "backupsdetails_id_seq",
+            "locktypes_id_seq",
+            "undousagesessions_id_seq",
+            "usagetemptables_id_seq",
+            "sqlconfigurationtable_id_seq",
+            "activitymonitorprocesses_id_seq",
+            "deadlock_reports_id_seq",
+            "activetransactionsinfo_id_seq",
+            "indexesinfo_id_seq",
+            "tablesinfo_id_seq",
+            "transactionlogstableinfo_id_seq",
+            "tbmonitorbackupstatus_id_seq",
+            "logfilestableinfo_id_seq",
+            "datafilestableinfo_id_seq",
+            "databasestableinfo_id_seq",
+            "tbmonitormemory_id_seq",
+            "tbmonitorcpuusage_id_seq",
+            "tbmonitorcpu_id_seq",
+            "tbmonitoraudit_id_seq",
+            "statusservicesqltable_id_seq",
+            "tbmonitorsqlcompilationtable_id_seq",
+            "region_id_seq",
+            "querybydurationtable_id_seq",
+            "tbmonitorblocstable_id_seq",
+            "tbmonitornbruserrunningdb_id_seq",
+            "tbmonitorlatchwaitspersecondtable_id_seq",
+            "tbmonitorfullscantable_id_seq",
+            "tbmonitorfailedjobstable_id_seq",
+            "tbmonitorerrorlogtable_id_seq",
+            "detailsessiontable_id_seq",
+            "tbmonitorcollectestatisticstable_id_seq",
+            "tbmonitorcollectefragmentationtable_id_seq",
+            "tbmonitorcollectediskdb_id_seq",
+            "tbmonitorcheckuserconection_id_seq",
+            "tbmonitortoplogicalphysicalread_id_seq",
+            "tbmonitortopcpu_id_seq",
+            "tbmonitorlockwait_id_seq",
+            "checklogspaceusedinpourcentagetable_id_seq",
+            "tbMonitorchecklatencydisktable_id_seq",
+            "tbmonitorlatchwait_id_seq",
+            "tbmonitorcheckbuffercatchhitratio_id_seq",
+            "tbmonitoraveragewaittimetable_id_seq",
+            "tbtaskmonitoringstatus_id_seq",
+            "datafiles_id_seq",
+            "tablespaceinfo_id_seq",
+            "checkdatabaseinfotable_id_seq",
+            "checkdataspaceusedinpourcentagetable_id_seq",  
+            "databases_id_seq",
+            "oraclesidtable_id_seq",
+            "servers_id_seq"
+        ]
+
+
+
+        for table in tables_to_clear:
+            pg_cursor.execute(f"DELETE FROM {table}")
+
+        for seq in sequences_to_reset:
+            pg_cursor.execute(f"ALTER SEQUENCE {seq} RESTART WITH 1")
+
+        pg_conn.commit()
+
+
+        server_cache, sid_cache, db_cache = {}, {}, {}
+
+        for conn_info in oracle_connections:
+            try:
+                dsn = oracledb.makedsn(conn_info["host"], conn_info["port"], service_name=conn_info["service_name"])
+                with oracledb.connect(user=conn_info["user"], password=conn_info["password"], dsn=dsn) as ora_conn:
+                    with ora_conn.cursor() as ora_cursor:
+
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']}...")
+
+                        servers = fetch_all(ora_cursor, "SELECT servername FROM servers")
+                        for server in servers:
+                            servername = server['servername'].strip().lower()
+                            if servername not in server_cache:
+                                pg_cursor.execute("INSERT INTO servers (servername) VALUES (%s) RETURNING id", (servername,))
+                                server_id = pg_cursor.fetchone()[0]
+                                pg_conn.commit()
+                                server_cache[servername] = server_id
+                            else:
+                                server_id = server_cache[servername]
+
+                        oracle_sids = fetch_all(ora_cursor, "SELECT servername, oraclesid FROM oraclesidtable")
+                        for sid_entry in oracle_sids:
+                            servername = sid_entry['servername'].strip().lower()
+                            sid = sid_entry['oraclesid'].strip().lower()
+                            server_id = server_cache.get(servername)
+                            if not server_id:
+                                continue
+                            if (server_id, sid) not in sid_cache:
+                                pg_cursor.execute("INSERT INTO oraclesidtable (serverid, oraclesid) VALUES (%s, %s) RETURNING id", (server_id, sid))
+                                sid_id = pg_cursor.fetchone()[0]
+                                pg_conn.commit()
+                                sid_cache[(server_id, sid)] = sid_id
+                            else:
+                                sid_id = sid_cache[(server_id, sid)]
+
+                        databases = fetch_all(ora_cursor, "SELECT servername, oraclesid, databasename, datecollecte FROM databases")
+                        for db in databases:
+                            servername = db['servername'].strip().lower()
+                            sid = db['oraclesid'].strip().lower()
+                            dbname = db['databasename'].strip()
+                            collecte = db['datecollecte']
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, sid))
+                            if not server_id or not sid_id:
+                                continue
+                            if (server_id, sid, dbname) not in db_cache:
+                                pg_cursor.execute("""
+                                    INSERT INTO databases (serverid, oraclesidid, databasename, datecollecte)
+                                    VALUES (%s, %s, %s, %s) RETURNING id
+                                """, (server_id, sid_id, dbname, collecte))
+                                db_id = pg_cursor.fetchone()[0]
+                                pg_conn.commit()
+                                db_cache[(server_id, sid, dbname)] = db_id
+                            else:
+                                db_id = db_cache[(server_id, sid, dbname)]
+
+                        tsinfo = fetch_all(ora_cursor, "SELECT * FROM tablespaceinfo")
+                        for row in tsinfo:
+                            servername = row['servername'].strip().lower()
+                            sid = row['oraclesid'].strip().lower()
+                            dbname = row['databasename'].strip()
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, sid))
+                            db_id = db_cache.get((server_id, sid, dbname))
+                            if not server_id or not sid_id or not db_id:
+                                continue
+                            pg_cursor.execute("""
+                                INSERT INTO tablespaceinfo (
+                                    datecollecte, serverid, oraclesidid, databaseid,
+                                    tablespacename, status, usedspacemb, freespacemb, totalspacemb,
+                                    contents, extentmanagement, segmentspacemanagement,
+                                    filename, filesizeMB, isautoextensible, nextextentmb, maxsizemb
+                                )
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                RETURNING id
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id, row['tablespacename'], row['status'],
+                                row['usedspacemb'], row['freespacemb'], row['totalspacemb'], row['contents'],
+                                row['extentmanagement'], row['segmentspacemanagement'], row['filename'],
+                                row['sizemb'], row.get('autoextensible', '').strip().upper() == 'YES',
+                                row['nextextentmb'], row['maxsizemb']
+                            ))
+                            ts_id = pg_cursor.fetchone()[0]
+                            pg_conn.commit()
+
+                            print(f"🔍 Searching datafiles for: SID={row['oraclesid']}, Server={row['servername']}, DB={row['databasename']}, Tablespace={row['tablespacename']}")
+                            datafiles = fetch_all(ora_cursor, f"""
+                                SELECT * FROM datafiles
+                                WHERE LOWER(TRIM(oraclesid)) = '{row['oraclesid'].strip().lower()}'
+                                AND LOWER(TRIM(servername)) = '{row['servername'].strip().lower()}'
+                                AND LOWER(TRIM(databasename)) = '{row['databasename'].strip().lower()}'
+                                AND LOWER(TRIM(tablespacename)) = '{row['tablespacename'].strip().lower()}'
+                            """)
+
+                            for df in datafiles:
+                                try:
+                                    pg_cursor.execute("""
+                                        INSERT INTO datafiles (
+                                            serverid, oraclesidid, databaseid, tablespaceid,
+                                            datecollecte, servername, logicaldataname,
+                                            filelocation, totalfilesize_mb, filetype,
+                                            filegroupname, tablespacename
+                                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                    """, (
+                                        server_id, sid_id, db_id, ts_id,
+                                        df['datecollecte'],
+                                        df['servername'], df['logicaldataname'], df['filelocation'],
+                                        df['totalfilesize_mb'], df['filetype'], df['filegroupname'], df['tablespacename']
+                                    ))
+                                except Exception as insert_err:
+                                    print(f"❌ Failed to insert datafile record: {insert_err}")
+                            pg_conn.commit()
+
+                        # ✅ NEW: Collect data from TBTASKMONITORINGSTATUS
+                        monitoring_rows = fetch_all(ora_cursor, "SELECT * FROM TBTASKMONITORINGSTATUS")
+                        for row in monitoring_rows:
+                            servername = row['servername'].strip().lower()
+                            sid = row['oraclesid'].strip().lower()
+                            dbname = row['databasename'].strip()
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, sid))
+                            db_id = db_cache.get((server_id, sid, dbname))
+                            if not server_id or not sid_id or not db_id:
+                                continue
+
+                            try:
+                                pg_cursor.execute("""
+                                    INSERT INTO TBTASKMONITORINGSTATUS (
+                                        date_collecte, sev, serverid, oraclesidid, databaseid,
+                                        version, up_since, cpu_usage, io_wait, network_wait,
+                                        latch_wait, cpu_wait, memory_wait, lock_wait,
+                                        log_wait, remote_wait, other_wait, lsoshost,
+                                        db_alarms, host, cpu_load, memory_usage, disk_usage,
+                                        agent_status, os_status, status, os_version, up_since_os
+                                    ) VALUES (
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s,
+                                        %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s
+                                    )
+                                """, (
+                                    row['date_collecte'], row['sev'], server_id, sid_id, db_id,
+                                    row['version'], row['up_since'], row['cpu_usage'], row['io_wait'], row['network_wait'],
+                                    row['latch_wait'], row['cpu_wait'], row['memory_wait'], row['lock_wait'],
+                                    row['log_wait'], row['remote_wait'], row['other_wait'], row['lsoshost'],
+                                    row['db_alarms'].read() if hasattr(row['db_alarms'], 'read') else row['db_alarms'], row['host'], row['cpu_load'], row['memory_usage'], row['disk_usage'],
+                                    row['agent_status'], row['os_status'], row['status'], row['os_version'], row['up_since_os']
+                                ))
+                            except Exception as monitor_insert_err:
+                                print(f"❌ Failed to insert monitoring record: {monitor_insert_err}")
+                        pg_conn.commit()
+                        # ✅ NEW: Collect data from TBMonitorAverageWaitTimeTable
+                        waittime_rows = fetch_all(ora_cursor, "SELECT * FROM TBMonitorAverageWaitTimeTable")
+                        for row in waittime_rows:
+                            servername = row['servername'].strip().lower()
+                            sid = row['oraclesid'].strip().lower()
+                            dbname = row['databasename'].strip()
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, sid))
+                            db_id = db_cache.get((server_id, sid, dbname))
+                            if not server_id or not sid_id or not db_id:
+                                continue
+                            try:
+                                pg_cursor.execute("""
+                                    INSERT INTO TBMonitorAverageWaitTimeTable (
+                                        datecollecte, serverid, oraclesidid, databaseid,
+                                        countername, countervalue, countertype
+                                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                """, (
+                                    row['datecollecte'], server_id, sid_id, db_id,
+                                    row['countername'], row['countervalue'], row['countertype']
+                                ))
+                            except Exception as wait_insert_err:
+                                print(f"❌ Failed to insert wait time record: {wait_insert_err}")
+                        pg_conn.commit()
+                        # ✅ NEW: Collect data from TBMonitorCheckBufferCatchHitRatio
+                        buffer_rows = fetch_all(ora_cursor, "SELECT * FROM TBMonitorCheckBufferCatchHitRatio")
+                        for row in buffer_rows:
+                            servername = row['servername'].strip().lower()
+                            sid = row['oraclesid'].strip().lower()
+                            dbname = row['databasename'].strip()
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, sid))
+                            db_id = db_cache.get((server_id, sid, dbname))
+                            if not server_id or not sid_id or not db_id:
+                                continue
+                            try:
+                                pg_cursor.execute("""
+                                    INSERT INTO TBMonitorCheckBufferCatchHitRatio (
+                                        datecollecte, serverid, oraclesidid, databaseid,
+                                        counter_name, buffercachehitratio
+                                    ) VALUES (%s, %s, %s, %s, %s, %s)
+                                """, (
+                                    row['datecollecte'], server_id, sid_id, db_id,
+                                    row['counter_name'], row['buffercachehitratio']
+                                ))
+                            except Exception as buffer_insert_err:
+                                print(f"❌ Failed to insert buffer cache hit ratio: {buffer_insert_err}")
+                        pg_conn.commit()
+
+                        # ✅ Insert into CheckDataBaseInfoTable from Oracle ----
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                totalDBSize_MB, DB_Free_Space_Size_MB, DB_Used_Space_Size_MB,
+                                FILENAME, TYPE, FILEGROUPNAME, FILE_LOCATION,
+                                FILESIZE_MB, USEDSPACE_MB, FREESPACE_MB,
+                                AUTOGROW_STATUS, log_reuse_wait_desc, recovery_model_desc
+                            FROM CheckDataBaseInfoTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO CheckDataBaseInfoTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    totalDBSize_MB, DB_Free_Space_Size_MB, DB_Used_Space_Size_MB,
+                                    FILENAME, TYPE, FILEGROUPNAME, FILE_LOCATION,
+                                    FILESIZE_MB, USEDSPACE_MB, FREESPACE_MB,
+                                    AUTOGROW_STATUS, log_reuse_wait_desc, recovery_model_desc
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['totaldbsize_mb'], row['db_free_space_size_mb'], row['db_used_space_size_mb'],
+                                row['filename'], row['type'], row['filegroupname'], row['file_location'],
+                                row['filesize_mb'], row['usedspace_mb'], row['freespace_mb'],
+                                row['autogrow_status'], row['log_reuse_wait_desc'], row['recovery_model_desc']
+                            ))
+
+                        pg_conn.commit()
+                        #--
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for CheckDataSpaceUsedInPourcentageTable...")
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                    DateCollecte, ServerName, OracleSID, DatabaseName,
+                                    logicalDataName, tablespace_name, usage,
+                                    SpaceAllocatedMB, SpaceUsedMB, freeSpaceMB,
+                                    SpaceUsedPer, FreeSpacePer
+                                FROM CheckDataSpaceUsedInPourcentageTable
+                            """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not db_id:
+                                # skip if no DatabaseId FK found
+                                continue
+
+                            pg_cursor.execute("""
+                                INSERT INTO CheckDataSpaceUsedInPourcentageTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    logicalDataName, tablespace_name, usage,
+                                    SpaceAllocatedMB, SpaceUsedMB, freeSpaceMB,
+                                    SpaceUsedPer, FreeSpacePer
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['logicaldataname'], row['tablespace_name'], row['usage'],
+                                row['spaceallocatedmb'], row['spaceusedmb'], row['freespacemb'],
+                                row['spaceusedper'], row['freespaceper']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorLatchWait...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName, avg_latch_wait_time_ms
+                            FROM TBMonitorLatchWait
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorLatchWait (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId, avg_latch_wait_time_ms
+                                ) VALUES (%s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id, row['avg_latch_wait_time_ms']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCheckLatencyDiskTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName, path,
+                                ReadLatency, WriteLatency, AvgLatency, LatencyAssessment,
+                                AvgKBsPerTransfer, Volume
+                            FROM TBMonitorCheckLatencyDiskTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCheckLatencyDiskTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId, path,
+                                    ReadLatency, WriteLatency, AvgLatency, LatencyAssessment,
+                                    AvgKBsPerTransfer, Volume
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id, row['path'],
+                                row['readlatency'], row['writelatency'], row['avglatency'], row['latencyassessment'],
+                                row['avgkbspertransfer'], row['volume']
+                            ))
+
+                        pg_conn.commit()
+
+                        #----🔄🔄🔄🔄🔄🔄🔄🔄---
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for CheckLogSpaceUsedInPourcentageTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                GroupNumber, ThreadNumber, SequenceNumber, Bytes, Members,
+                                Status, FirstChangeNumber, FirstTime, NextChangeNumber,
+                                LogFileName, SpaceAllocatedMB, SpaceUsedMB, SpaceUsedPer, IsCurrent
+                            FROM CheckLogSpaceUsedInPourcentageTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            # Skip row if foreign keys are missing
+                            if not server_id or not sid_id or not db_id:
+                                continue
+
+                            pg_cursor.execute("""
+                                INSERT INTO CheckLogSpaceUsedInPourcentageTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    GroupNumber, ThreadNumber, SequenceNumber, Bytes, Members,
+                                    Status, FirstChangeNumber, FirstTime, NextChangeNumber,
+                                    LogFileName, SpaceAllocatedMB, SpaceUsedMB, SpaceUsedPer, IsCurrent
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['groupnumber'], row['threadnumber'], row['sequencenumber'], row['bytes'], row['members'],
+                                row['status'], row['firstchangenumber'], row['firsttime'], row['nextchangenumber'],
+                                row['logfilename'], row['spaceallocatedmb'], row['spaceusedmb'], row['spaceusedper'], row['iscurrent']
+                            ))
+
+                        pg_conn.commit()
+
+                        #*****🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorLockWait...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                avg_lock_wait_time_ms, blocked_sessions_count
+                            FROM TBMonitorLockWait
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorLockWait (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    avg_lock_wait_time_ms, blocked_sessions_count
+                                ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['avg_lock_wait_time_ms'], row['blocked_sessions_count']
+                            ))
+
+                        pg_conn.commit()
+
+                        #*****🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorTopCPU...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                session_id, serial#, sql_id, last_execution_time,
+                                cpu_time, average_cpu_time, elapsed_time,
+                                executions, buffer_gets, disk_reads, sql_text,
+                                username, program_name, module, action,
+                                machine, osuser
+                            FROM TBMonitorTopCPU
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            # Rename 'serial#' to 'serial_number' in PG
+                            serial_number = row.get('serial#')
+                            sql_text_clob = row['sql_text']
+                            if sql_text_clob is not None:
+                                # If LOB object, read its contents
+                                try:
+                                    sql_text = sql_text_clob.read()
+                                except AttributeError:
+                                    # already a string
+                                    sql_text = sql_text_clob
+                            else:
+                                sql_text = None
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorTopCPU (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    session_id, serial_number, sql_id, last_execution_time,
+                                    cpu_time, average_cpu_time, elapsed_time,
+                                    executions, buffer_gets, disk_reads, sql_text,
+                                    username, program_name, module, action,
+                                    machine, osuser
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['session_id'], serial_number, row['sql_id'], row['last_execution_time'],
+                                row['cpu_time'], row['average_cpu_time'], row['elapsed_time'],
+                                row['executions'], row['buffer_gets'], row['disk_reads'], sql_text,
+                                row['username'], row['program_name'], row['module'], row['action'],
+                                row['machine'], row['osuser']
+                            ))
+
+                        pg_conn.commit()
+                        # 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorTopLogicalPhysicalRead...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                session_id, serial#, sql_id, logical_reads, physical_reads,
+                                executions, rows_processed, sql_text,
+                                username, program_name, module, action,
+                                machine, osuser
+                            FROM TBMonitorTopLogicalPhysicalRead
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            # Read CLOB content as string
+                            sql_text_clob = row['sql_text']
+                            if sql_text_clob is not None:
+                                try:
+                                    sql_text = sql_text_clob.read()
+                                except AttributeError:
+                                    sql_text = sql_text_clob
+                            else:
+                                sql_text = None
+
+                            serial_number = row.get('serial#')
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorTopLogicalPhysicalRead (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    session_id, serial_number, sql_id,
+                                    logical_reads, physical_reads, executions,
+                                    rows_processed, sql_text, username,
+                                    program_name, module, action,
+                                    machine, osuser
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['session_id'], serial_number, row['sql_id'],
+                                row['logical_reads'], row['physical_reads'], row['executions'],
+                                row['rows_processed'], sql_text, row['username'],
+                                row['program_name'], row['module'], row['action'],
+                                row['machine'], row['osuser']
+                            ))
+
+                        pg_conn.commit()
+                        # 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCheckUserConection...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                Username, SessionStatus, CurrentSessions, MaxSessions
+                            FROM TBMonitorCheckUserConection
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            # Skip if foreign keys are missing
+                            if not server_id or not sid_id or not db_id:
+                                continue
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCheckUserConection (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    Username, SessionStatus, CurrentSessions, MaxSessions
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['username'], row['sessionstatus'], row['currentsessions'], row['maxsessions']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCollecteDiskDB...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                Drivename, Datecollecte, ServerName, OracleSID, DatabaseName,
+                                Total_space_GB, Free_Space_GB
+                            FROM TBMonitorCollecteDiskDB
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if FK missing
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCollecteDiskDB (
+                                    Drivename, Datecollecte, ServerId, OracleSIDId, DatabaseId,
+                                    Total_space_GB, Free_Space_GB
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['drivename'], row['datecollecte'], server_id, sid_id, db_id,
+                                row['total_space_gb'], row['free_space_gb']
+                            ))
+
+                        pg_conn.commit()
+                        # 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCollecteFragmentationTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                Id, DateCollecte, ServerName, OracleSID, DatabaseName,
+                                IndexType, IndexDepth, IndexLevel, AvgFragCount, FragmentCount,
+                                Owner, ObjectName, ObjectType, FragmentationPercent
+                            FROM TBMonitorCollecteFragmentationTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows missing FKs
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCollecteFragmentationTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    IndexType, IndexDepth, IndexLevel, AvgFragCount, FragmentCount,
+                                    Owner, ObjectName, ObjectType, FragmentationPercent
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['indextype'], row['indexdepth'], row['indexlevel'], row['avgfragcount'], row['fragmentcount'],
+                                row['owner'], row['objectname'], row['objecttype'], row['fragmentationpercent']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCollecteStatisticsTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT DateCollecte, ServerName, OracleSID, DatabaseName, name, StatsUpdated
+                            FROM TBMonitorCollecteStatisticsTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCollecteStatisticsTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId, name, StatsUpdated
+                                ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['name'], row['statsupdated']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for detailSessionTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                id, DateCollecte, ServerName, OracleSID, DatabaseName,
+                                session_id, serial#, login_time, host_name, program_name,
+                                client_interface_name, login_name, status, memory_usage_mb,
+                                total_elapsed_time, last_call_start_time, reads, logical_reads,
+                                is_user_process, original_login_name, database_id, num_reads,
+                                text, sql_id, event, wait_class, blocking_session, module,
+                                action, cpu_time, elapsed_time, plsql_entry_object_id
+                            FROM detailSessionTable
+                        """)
+
+                        for row in rows:
+                            servername = row["servername"].strip().lower() if row["servername"] else None
+                            oraclesid = row["oraclesid"].strip().lower() if row["oraclesid"] else None
+                            dbname = row["databasename"].strip() if row["databasename"] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if FK missing
+
+                            # Handle CLOB text field
+                            text_clob = row["text"]
+                            if text_clob is not None:
+                                try:
+                                    text_str = text_clob.read()
+                                except AttributeError:
+                                    text_str = text_clob
+                            else:
+                                text_str = None
+
+                            # Map serial# to serial_number
+                            serial_number = row.get("serial#")
+
+                            # Convert is_user_process NUMBER(1) to boolean
+                            is_user_process = bool(row["is_user_process"]) if row["is_user_process"] is not None else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO detailSessionTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    session_id, serial_number, login_time, host_name,
+                                    program_name, client_interface_name, login_name, status,
+                                    memory_usage_mb, total_elapsed_time, last_call_start_time,
+                                    reads, logical_reads, is_user_process, original_login_name,
+                                    database_id, num_reads, text, sql_id, event, wait_class,
+                                    blocking_session, module, action, cpu_time, elapsed_time,
+                                    plsql_entry_object_id
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s
+                                )
+                            """, (
+                                row["datecollecte"], server_id, sid_id, db_id,
+                                row["session_id"], serial_number, row["login_time"], row["host_name"],
+                                row["program_name"], row["client_interface_name"], row["login_name"], row["status"],
+                                row["memory_usage_mb"], row["total_elapsed_time"], row["last_call_start_time"],
+                                row["reads"], row["logical_reads"], is_user_process, row["original_login_name"],
+                                row["database_id"], row["num_reads"], text_str, row["sql_id"], row["event"], row["wait_class"],
+                                row["blocking_session"], row["module"], row["action"], row["cpu_time"], row["elapsed_time"],
+                                row["plsql_entry_object_id"]
+                            ))
+
+                        pg_conn.commit()
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorErrorLogTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                logdate, procInfo, ERRORLOG
+                            FROM TBMonitorErrorLogTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorErrorLogTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    logdate, procInfo, ERRORLOG
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['logdate'], row['procinfo'], row['errorlog']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorFailedJobsTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                IndicatorCategory, IndicatorName, JobName, Description,
+                                JobStartTime, JobDuration, ErrorMessage
+                            FROM TBMonitorFailedJobsTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorFailedJobsTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    IndicatorCategory, IndicatorName, JobName, Description,
+                                    JobStartTime, JobDuration, ErrorMessage
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['indicatorcategory'], row['indicatorname'], row['jobname'],
+                                row['description'], row['jobstarttime'], row['jobduration'],
+                                row['errormessage']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorFullScanTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                counter_name, cntr_value, cntr_type
+                            FROM TBMonitorFullScanTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorFullScanTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    counter_name, cntr_value, cntr_type
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['counter_name'], row['cntr_value'], row['cntr_type']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorLatchWaitsPerSecondTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                ObjectName, CounterName, CounterValue, CounterType, TotalWaitTimeSeconds
+                            FROM TBMonitorLatchWaitsPerSecondTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorLatchWaitsPerSecondTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    ObjectName, CounterName, CounterValue, CounterType, TotalWaitTimeSeconds
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['objectname'], row['countername'], row['countervalue'], row['countertype'], row['totalwaittimeseconds']
+                            ))
+
+                        pg_conn.commit()
+
+                        # 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorNbrUserRunningDB...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName, numbersession
+                            FROM TBMonitorNbrUserRunningDB
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorNbrUserRunningDB (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId, numbersession
+                                ) VALUES (%s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id, row['numbersession']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄 
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorBlocsTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                ServerName, OracleSID, DatabaseName, TablespaceName,
+                                SegmentName, SegmentType, UsedBlocks, TotalBlocks, FreeBlocks,
+                                DateCollecte
+                            FROM TBMonitorBlocsTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorBlocsTable (
+                                    ServerId, OracleSIDId, DatabaseId, TablespaceName,
+                                    SegmentName, SegmentType, UsedBlocks, TotalBlocks,
+                                    FreeBlocks, DateCollecte
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                server_id, sid_id, db_id, row['tablespacename'],
+                                row['segmentname'], row['segmenttype'], row['usedblocks'],
+                                row['totalblocks'], row['freeblocks'], row['datecollecte']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for QueryBydurationTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                session_id, duration_ms, database_id, cpu_time_ms,
+                                wait_time, logical_reads, statement_text
+                            FROM QueryBydurationTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            # Handle CLOB field for statement_text
+                            statement_text_clob = row['statement_text']
+                            if statement_text_clob is not None:
+                                try:
+                                    statement_text = statement_text_clob.read()
+                                except AttributeError:
+                                    statement_text = statement_text_clob
+                            else:
+                                statement_text = None
+
+                            pg_cursor.execute("""
+                                INSERT INTO QueryBydurationTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    session_id, duration_ms, database_id, cpu_time_ms,
+                                    wait_time, logical_reads, statement_text
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['session_id'], row['duration_ms'], row['database_id'], row['cpu_time_ms'],
+                                row['wait_time'], row['logical_reads'], statement_text
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for Region...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                ServerName, OracleSID, DatabaseName, DateCollecte,
+                                IPAddress, Region, Country, City, Latitude, Longitude
+                            FROM Region
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO Region (
+                                    ServerId, OracleSIDId, DatabaseId, DateCollecte,
+                                    IPAddress, Region, Country, City, Latitude, Longitude, statement_text
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                server_id, sid_id, db_id, row['datecollecte'],
+                                row['ipaddress'], row['region'], row['country'],
+                                row['city'], row['latitude'], row['longitude'], None
+                            ))
+
+                        pg_conn.commit()
+                        
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorSqlCompilationTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                counter_name, object_name, cntr_value
+                            FROM TBMonitorSqlCompilationTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorSqlCompilationTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    counter_name, object_name, cntr_value
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['counter_name'], row['object_name'], row['cntr_value']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for StatusServiceSQLTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                ServiceName, StartupType, StatusDesc
+                            FROM StatusServiceSQLTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO StatusServiceSQLTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    ServiceName, StartupType, StatusDesc
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['servicename'], row['startuptype'], row['statusdesc']
+                            ))
+
+                        pg_conn.commit()
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorAudit...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                Control, RiskDescription, ActionRequired,
+                                MetricValue, ExpectedValue, Alert
+                            FROM TBMonitorAudit
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            # Convert the Oracle Alert field (NUMBER(1)) to Boolean
+                            alert = True if row['alert'] == 1 else False if row['alert'] == 0 else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorAudit (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    Control, RiskDescription, ActionRequired,
+                                    MetricValue, ExpectedValue, Alert
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['control'], row['riskdescription'], row['actionrequired'],
+                                row['metricvalue'], row['expectedvalue'], alert
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCPU...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                cpu_idle, cpu_sql
+                            FROM TBMonitorCPU
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCPU (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    cpu_idle, cpu_sql
+                                ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['cpu_idle'], row['cpu_sql']
+                            ))
+
+                        pg_conn.commit()
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorCpuUsage...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, OracleSID, ServerName, DatabaseName, CpuUsage
+                            FROM TBMonitorCpuUsage
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorCpuUsage (
+                                    DateCollecte, OracleSIDId, ServerId, DatabaseId, CpuUsage
+                                ) VALUES (%s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], sid_id, server_id, db_id, row['cpuusage']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorMemory...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                Total_OSMemory, AvailableMemory, MemoryUtilizationPct,
+                                PGA_Allocated, SGA_Allocated
+                            FROM TBMonitorMemory
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorMemory (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    Total_OSMemory, AvailableMemory, MemoryUtilizationPct,
+                                    PGA_Allocated, SGA_Allocated
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['total_osmemory'], row['availablememory'], row['memoryutilizationpct'],
+                                row['pga_allocated'], row['sga_allocated']
+                            ))
+
+                        pg_conn.commit()
+                        
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for DatabasesTableInfo...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DBID, DateCollecte, ServerName, OracleSID, DatabaseName,
+                                DBUniqueName, Created, LogMode, OpenMode, ProtectionMode,
+                                ProtectionLevel, DatabaseRole, PlatformName, FlashbackOn, CDB,
+                                VersionTime, ControlfileTime, Status, DatabaseSpace,
+                                DataSize, DataUsedSize, DataFreeSize, LogSize, LogUsedSize,
+                                LogFreeSize, NumberOfTables, NumberOfIndexes, NumberOfFilegroups,
+                                LocalLastBackupDate, HadrMethod
+                            FROM DatabasesTableInfo
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO DatabasesTableInfo (
+                                    DBID, DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    DBUniqueName, Created, LogMode, OpenMode, ProtectionMode,
+                                    ProtectionLevel, DatabaseRole, PlatformName, FlashbackOn, CDB,
+                                    VersionTime, ControlfileTime, Status, DatabaseSpace,
+                                    DataSize, DataUsedSize, DataFreeSize, LogSize, LogUsedSize,
+                                    LogFreeSize, NumberOfTables, NumberOfIndexes, NumberOfFilegroups,
+                                    LocalLastBackupDate, HadrMethod
+                                ) VALUES (
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s
+                                )
+                            """, (
+                                row['dbid'], row['datecollecte'], server_id, sid_id, db_id,
+                                row['dbuniquename'], row['created'], row['logmode'], row['openmode'], row['protectionmode'],
+                                row['protectionlevel'], row['databaserole'], row['platformname'], row['flashbackon'], row['cdb'],
+                                row['versiontime'], row['controlfiletime'], row['status'], row['databasespace'],
+                                row['datasize'], row['datausedsize'], row['datafreesize'], row['logsize'], row['logusedsize'],
+                                row['logfreesize'], row['numberoftables'], row['numberofindexes'], row['numberoffilegroups'],
+                                row['locallastbackupdate'], row['hadrmethod']
+                            ))
+
+                        pg_conn.commit()
+                        
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for DataFilesTableInfo...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                FileID, FileName, TablespaceName, Bytes, Blocks,
+                                Status, AutoExtensible, MaxBytes, IncrementBy,
+                                OnlineStatus, LostWriteProtect, CreationTime, LastChange
+                            FROM DataFilesTableInfo
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO DataFilesTableInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    FileID, FileName, TablespaceName, Bytes, Blocks,
+                                    Status, AutoExtensible, MaxBytes, IncrementBy,
+                                    OnlineStatus, LostWriteProtect, CreationTime, LastChange
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['fileid'], row['filename'], row['tablespacename'], row['bytes'], row['blocks'],
+                                row['status'], row['autoextensible'], row['maxbytes'], row['incrementby'],
+                                row['onlinestatus'], row['lostwriteprotect'], row['creationtime'], row['lastchange']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for LogFilesTableInfo...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                LogGroup, FileName, FileType, TotalSizeMB,
+                                UsedSizeMB, FreeSizeMB, UsedPct, FreePct,
+                                Status, "SEQUENCE#", Members, FilePath
+                            FROM LogFilesTableInfo
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO LogFilesTableInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    LogGroup, FileName, FileType, TotalSizeMB,
+                                    UsedSizeMB, FreeSizeMB, UsedPct, FreePct,
+                                    Status, SequenceNum, Members, FilePath
+                                ) VALUES (
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s,
+                                    %s, %s, %s, %s
+                                )
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['loggroup'], row['filename'], row['filetype'], row['totalsizemb'],
+                                row['usedsizemb'], row['freesizemb'], row['usedpct'], row['freepct'],
+                                row['status'], row['sequence#'], row['members'], row['filepath']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorBackupStatus...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                DatabaseType, LastBackupDate, BackupStatus
+                            FROM TBMonitorBackupStatus
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorBackupStatus (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    DatabaseType, LastBackupDate, BackupStatus
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['databasetype'], row['lastbackupdate'], row['backupstatus']
+                            ))
+
+                        pg_conn.commit()
+                        
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TransactionLogsTableInfo...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                FileGroup, FileCount, Type,
+                                TotalSize, UsedSize, UsedPct,
+                                FreeSize, FreePct, CanGrow
+                            FROM TransactionLogsTableInfo
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with unresolved foreign keys
+
+                            pg_cursor.execute("""
+                                INSERT INTO TransactionLogsTableInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    FileGroup, FileCount, Type,
+                                    TotalSize, UsedSize, UsedPct,
+                                    FreeSize, FreePct, CanGrow
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['filegroup'], row['filecount'], row['type'],
+                                row['totalsize'], row['usedsize'], row['usedpct'],
+                                row['freesize'], row['freepct'], row['cangrow']
+                            ))
+
+                        pg_conn.commit()
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for TablesInfo from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                OwnerName, TableName, FileGroupName,
+                                TableSize, ReservedSize, UsedSize, FreeSize,
+                                PercentOfDB, RowCount,
+                                ReservedMemory, UsedMemory,
+                                NumberOfPartitions, CompressionType, TableType
+                            FROM TablesInfo
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK info
+
+                            pg_cursor.execute("""
+                                INSERT INTO TablesInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    OwnerName, TableName, FileGroupName,
+                                    TableSize, ReservedSize, UsedSize, FreeSize,
+                                    PercentOfDB, RowCount,
+                                    ReservedMemory, UsedMemory,
+                                    NumberOfPartitions, CompressionType, TableType
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['ownername'], row['tablename'], row['filegroupname'],
+                                row['tablesize'], row['reservedsize'], row['usedsize'], row['freesize'],
+                                row['percentofdb'], row['rowcount'],
+                                row['reservedmemory'], row['usedmemory'],
+                                row['numberofpartitions'], row['compressiontype'], row['tabletype']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for IndexesInfo from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                OwnerName, TableName, IndexName, IndexId,
+                                FileGroupName, Type, No_OfKeys,
+                                IndexSize, UsedSize, FreeSize,
+                                Rows1, RowModCtr, OriginalFillFactor
+                            FROM IndexesInfo
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip incomplete foreign key mappings
+
+                            pg_cursor.execute("""
+                                INSERT INTO IndexesInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    OwnerName, TableName, IndexName, IndexId,
+                                    FileGroupName, Type, No_OfKeys,
+                                    IndexSize, UsedSize, FreeSize,
+                                    Rows1, RowModCtr, OriginalFillFactor
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['ownername'], row['tablename'], row['indexname'], row['indexid'],
+                                row['filegroupname'], row['type'], row['no_ofkeys'],
+                                row['indexsize'], row['usedsize'], row['freesize'],
+                                row['rows1'], row['rowmodctr'], row['originalfillfactor']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for ActiveTransactionsInfo from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                SqlText, ExecutionCount, CpuTime, TotalElapsedTime, CreationTime
+                            FROM ActiveTransactionsInfo
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip rows with unresolved FKs
+
+                            sql_text = str(row['sqltext'].read()) if row['sqltext'] is not None else None
+
+                            pg_cursor.execute("""
+                                INSERT INTO ActiveTransactionsInfo (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    SqlText, ExecutionCount, CpuTime, TotalElapsedTime, CreationTime
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                sql_text, row['executioncount'], row['cputime'],
+                                row['totalelapsedtime'], row['creationtime']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+                        #
+                        print(f"🔄 Transferring data for deadlock_reports from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                SessionID, OracleUsername, OSUserName, Process, LockedMode,
+                                ObjectID, ObjectName, ObjectType, Owner, LockType,
+                                ID1, ID2, LMode, Request, CTime, Block
+                            FROM deadlock_reports
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if foreign keys can't be resolved
+
+                            pg_cursor.execute("""
+                                INSERT INTO deadlock_reports (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    SessionID, OracleUsername, OSUserName, Process, LockedMode,
+                                    ObjectID, ObjectName, ObjectType, Owner, LockType,
+                                    ID1, ID2, LMode, Request, CTime, Block
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['sessionid'], row['oracleusername'], row['osusername'], row['process'], row['lockedmode'],
+                                row['objectid'], row['objectname'], row['objecttype'], row['owner'], row['locktype'],
+                                row['id1'], row['id2'], row['lmode'], row['request'], row['ctime'], row['block']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for ActivityMonitorProcesses from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                SessionID, UserProcess, Username, Application, WaitType, Statement
+                            FROM ActivityMonitorProcesses
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if foreign keys can't be resolved
+
+                            # Handle Oracle CLOB safely
+                            statement_text = None
+                            try:
+                                statement_text = row['statement'].read() if row['statement'] else None
+                            except Exception:
+                                pass  # skip CLOB error
+
+                            pg_cursor.execute("""
+                                INSERT INTO ActivityMonitorProcesses (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    SessionID, UserProcess, Username, Application, WaitType, Statement
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['sessionid'], bool(row['userprocess']),
+                                row['username'], row['application'],
+                                row['waittype'], statement_text
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for SQLConfigurationTable from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                ParamNum, ParamName, RunValue, ConfigurationValue,
+                                PreviousValue, MinValue, MaxValue, Modifiable, Description
+                            FROM SQLConfigurationTable
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if any FK is unresolved
+
+                            pg_cursor.execute("""
+                                INSERT INTO SQLConfigurationTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    ParamNum, ParamName, RunValue, ConfigurationValue,
+                                    PreviousValue, MinValue, MaxValue, Modifiable, Description
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['paramnum'], row['paramname'], row['runvalue'], row['configurationvalue'],
+                                row['previousvalue'], row['minvalue'], row['maxvalue'],
+                                row['modifiable'], row['description']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for UsageTempTables from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                TablesCreated, TablesForDestruction, TablesPerSecond
+                            FROM UsageTempTables
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if any FK is unresolved
+
+                            pg_cursor.execute("""
+                                INSERT INTO UsageTempTables (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    TablesCreated, TablesForDestruction, TablesPerSecond
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['tablescreated'], row['tablesfordestruction'], row['tablespersecond']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for UndoUsageSessions from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                SID, Serial#, Username, Status, UndoSegment,
+                                UsedUndoBlocks, UsedUndoRecords, TransactionStartTime,
+                                LogonTime, Machine, Program
+                            FROM UndoUsageSessions
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # skip if any FK is unresolved
+
+                            pg_cursor.execute("""
+                                INSERT INTO UndoUsageSessions (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    SID, SerialNum, Username, Status, UndoSegment,
+                                    UsedUndoBlocks, UsedUndoRecords, TransactionStartTime,
+                                    LogonTime, Machine, Program
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['sid'], row['serial#'], row['username'], row['status'], row['undosegment'],
+                                row['usedundoblocks'], row['usedundorecords'], row['transactionstarttime'],
+                                row['logontime'], row['machine'], row['program']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for LockTypes from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                ObjectName, CounterName, Username,
+                                CounterValue, CounterType
+                            FROM LockTypes
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip row if any FK is unresolved
+
+                            pg_cursor.execute("""
+                                INSERT INTO LockTypes (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    ObjectName, CounterName, Username,
+                                    CounterValue, CounterType
+                                ) VALUES (%s, %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['objectname'], row['countername'], row['username'],
+                                row['countervalue'], row['countertype']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #
+                        print(f"🔄 Transferring data for BackupsDetails from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                BACKUP_JOB_ID,
+                                DateCollecte,
+                                ServerName,
+                                OracleSID,
+                                DatabaseName,
+                                RecoveryModel,
+                                BackupType,
+                                Full_Start_Date,
+                                Full_Duration,
+                                Full_Size,
+                                Differential_Start_Date,
+                                Differential_Duration,
+                                Differential_Size,
+                                Log_Start_Date,
+                                Log_Duration,
+                                Log_Size,
+                                Export_Start_Date,
+                                Export_Duration,
+                                Export_Size,
+                                Worst_RPO_Last_30_Days
+                            FROM BackupsDetails
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip if foreign key resolution fails
+
+                            pg_cursor.execute("""
+                                INSERT INTO BackupsDetails (
+                                    BACKUP_JOB_ID, DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    RecoveryModel, BackupType,
+                                    Full_Start_Date, Full_Duration, Full_Size,
+                                    Differential_Start_Date, Differential_Duration, Differential_Size,
+                                    Log_Start_Date, Log_Duration, Log_Size,
+                                    Export_Start_Date, Export_Duration, Export_Size,
+                                    Worst_RPO_Last_30_Days
+                                ) VALUES (%s, %s, %s, %s, %s,
+                                        %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s)
+                            """, (
+                                row['backup_job_id'], row['datecollecte'], server_id, sid_id, db_id,
+                                row['recoverymodel'], row['backuptype'],
+                                row['full_start_date'], row['full_duration'], row['full_size'],
+                                row['differential_start_date'], row['differential_duration'], row['differential_size'],
+                                row['log_start_date'], row['log_duration'], row['log_size'],
+                                row['export_start_date'], row['export_duration'], row['export_size'],
+                                row['worst_rpo_last_30_days']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for BackupHistory from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                BACKUP_JOB_ID,
+                                DateCollecte,
+                                ServerName,
+                                OracleSID,
+                                DatabaseName,
+                                Type,
+                                StartDate,
+                                Duration,
+                                BackupSize,
+                                CopyOnly,
+                                Compressed,
+                                Encrypted,
+                                Location,
+                                BackupSource
+                            FROM BackupHistory
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip if foreign key resolution fails
+
+                            pg_cursor.execute("""
+                                INSERT INTO BackupHistory (
+                                    BACKUP_JOB_ID, DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    Type, StartDate, Duration, BackupSize,
+                                    CopyOnly, Compressed, Encrypted,
+                                    Location, BackupSource
+                                ) VALUES (%s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s,
+                                        %s, %s, %s,
+                                        %s, %s)
+                            """, (
+                                row['backup_job_id'], row['datecollecte'], server_id, sid_id, db_id,
+                                row['type'], row['startdate'], row['duration'], row['backupsize'],
+                                row['copyonly'], row['compressed'], row['encrypted'],
+                                row['location'], row['backupsource']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for ServiceStatus from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte,
+                                ServerName,
+                                OracleSID,
+                                DatabaseName,
+                                ServiceName,
+                                Status
+                            FROM ServiceStatus
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip row if FK resolution fails
+
+                            pg_cursor.execute("""
+                                INSERT INTO ServiceStatus (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    ServiceName, Status
+                                ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['servicename'], row['status']
+                            ))
+                            inserted += 1
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Transferring data for JobStatus from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte,
+                                ServerName,
+                                OracleSID,
+                                DatabaseName,
+                                job_name,
+                                status,
+                                start_time
+                            FROM JobStatus
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip if FK lookup fails
+
+                            try:
+                                pg_cursor.execute("""
+                                    INSERT INTO JobStatus (
+                                        DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                        job_name, status, start_time
+                                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                                    ON CONFLICT (job_name) DO NOTHING
+                                """, (
+                                    row['datecollecte'], server_id, sid_id, db_id,
+                                    row['job_name'], row['status'], row['start_time']
+                                ))
+                                inserted += 1
+                            except Exception as e:
+                                print(f"⚠️  Skipped row due to error: {e}")
+
+                        pg_conn.commit()
+
+                        #🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 
+                        print(f"🔄 Transferring data for TopQueryPerformanceLog from Oracle ({conn_info['host']})...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte,
+                                ServerName,
+                                OracleSID,
+                                DatabaseName,
+                                QueryStatement,
+                                Requests,
+                                AvgLatency,
+                                TotalTime,
+                                LastExecutionTime,
+                                Status,
+                                IndexStatus,
+                                TableName,
+                                EqualityColumns,
+                                InequalityColumns,
+                                IncludedColumns,
+                                IndexSeekScanCount,
+                                EstimatedImpact,
+                                SuggestedIndex,
+                                TotalQueriesCurrentlyRunning,
+                                MaxDuration,
+                                TotalWaitPercent,
+                                CPUWaitPercent,
+                                NetworkWaitPercent,
+                                OtherWaitPercent
+                            FROM TopQueryPerformanceLog
+                        """)
+
+                        inserted = 0
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername)
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and sid_id and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  
+
+                            try:
+                                query_stmt = str(row['querystatement'].read()) if row['querystatement'] else None
+                                suggested_idx = str(row['suggestedindex'].read()) if row['suggestedindex'] else None
+                                equality_columns = str(row['equalitycolumns']) if row['equalitycolumns'] else None
+                                inequality_columns = str(row['inequalitycolumns']) if row['inequalitycolumns'] else None
+                                included_columns = str(row['includedcolumns']) if row['includedcolumns'] else None
+
+                                pg_cursor.execute("""
+                                    INSERT INTO TopQueryPerformanceLog (
+                                        DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                        QueryStatement, Requests, AvgLatency, TotalTime, LastExecutionTime,
+                                        Status, IndexStatus, TableName, EqualityColumns, InequalityColumns,
+                                        IncludedColumns, IndexSeekScanCount, EstimatedImpact, SuggestedIndex,
+                                        TotalQueriesCurrentlyRunning, MaxDuration, TotalWaitPercent,
+                                        CPUWaitPercent, NetworkWaitPercent, OtherWaitPercent
+                                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                """, (
+                                    row['datecollecte'], server_id, sid_id, db_id,
+                                    query_stmt, row['requests'], row['avglatency'], row['totaltime'],
+                                    row['lastexecutiontime'], row['status'], row['indexstatus'], row['tablename'],
+                                    equality_columns, inequality_columns, included_columns,
+                                    row['indexseekscancount'], row['estimatedimpact'], suggested_idx,
+                                    row['totalqueriescurrentlyrunning'], row['maxduration'], row['totalwaitpercent'],
+                                    row['cpuwaitpercent'], row['networkwaitpercent'], row['otherwaitpercent']
+                                ))
+                                inserted += 1
+                            except Exception as e:
+                                print(f"⚠️  Error inserting row: {e}")
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for AlertStatusServiceOracleTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                service_name, startup_type, status
+                            FROM AlertStatusServiceOracleTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with unresolved foreign keys
+
+                            pg_cursor.execute("""
+                                INSERT INTO AlertStatusServiceOracleTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    service_name, startup_type, status
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['service_name'], row['startup_type'], row['status']
+                            ))
+
+                        pg_conn.commit()
+                        #
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorBatchRequestTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                CounterName, CounterValue, cntr_type
+                            FROM TBMonitorBatchRequestTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with missing FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorBatchRequestTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    CounterName, CounterValue, cntr_type
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['countername'], row['countervalue'], row.get('cntr_type', 272696576)
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 🔄 
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for HWM_LOG...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DATECOLLECTE, TABLE_NAME, SERVER_NAME, ORACLE_SID, DATABASE_NAME,
+                                TOTAL_BLOCKS, USED_BLOCKS, HWM_BLOCKS, SEGMENT_SIZE_MB, LOG_DATE
+                            FROM HWM_LOG
+                        """)
+
+                        for row in rows:
+                            servername = row['server_name'].strip().lower() if row['server_name'] else None
+                            oraclesid = row['oracle_sid'].strip().lower() if row['oracle_sid'] else None
+                            dbname = row['database_name'].strip() if row['database_name'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  # Skip rows with unresolved FK references
+
+                            pg_cursor.execute("""
+                                INSERT INTO HWM_LOG (
+                                    DATECOLLECTE, TABLE_NAME, ServerId, OracleSIDId, DatabaseId,
+                                    TOTAL_BLOCKS, USED_BLOCKS, HWM_BLOCKS, SEGMENT_SIZE_MB, LOG_DATE
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], row['table_name'], server_id, sid_id, db_id,
+                                row['total_blocks'], row['used_blocks'], row['hwm_blocks'],
+                                row['segment_size_mb'], row['log_date']
+                            ))
+
+                        pg_conn.commit()
+
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMonitorServicePackTable...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DateCollecte, ServerName, OracleSID, DatabaseName,
+                                PlatformName, Version
+                            FROM TBMonitorServicePackTable
+                        """)
+
+                        for row in rows:
+                            servername = row['servername'].strip().lower() if row['servername'] else None
+                            oraclesid = row['oraclesid'].strip().lower() if row['oraclesid'] else None
+                            dbname = row['databasename'].strip() if row['databasename'] else None
+
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            if not server_id or not sid_id or not db_id:
+                                continue  
+
+                            pg_cursor.execute("""
+                                INSERT INTO TBMonitorServicePackTable (
+                                    DateCollecte, ServerId, OracleSIDId, DatabaseId,
+                                    PlatformName, Version
+                                ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['datecollecte'], server_id, sid_id, db_id,
+                                row['platformname'], row['version']
+                            ))
+
+                        pg_conn.commit()
+                        
+                        #🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
+                        print(f"🔄 Processing Oracle DB at {conn_info['host']} for TBMONITORWORKLOAD...")
+
+                        rows = fetch_all(ora_cursor, """
+                            SELECT
+                                DATE_COLLECTE, SERVER_NAME, ORACLE_SID, DATABASE_NAME,
+                                CPU_USAGE, IO_WAIT, NETWORK_WAIT, LATCH_WAIT, CPU_WAIT,
+                                MEMORY_WAIT, LOCK_WAIT, LOG_WAIT, REMOTE_WAIT, OTHER_WAIT,
+                                LSOS_HOST, CONCURRENCY_WAIT, SYSTEM_IO_WAIT, USER_COMMITS,
+                                USER_ROLLBACKS, PHYSICAL_READS, PHYSICAL_WRITES, LOGICAL_READS,
+                                ACTIVE_SESSIONS, DB_CPU_TIME, DB_WAIT_TIME
+                            FROM TBMONITORWORKLOAD
+                        """)
+
+                        for row in rows:
+                            # Use lowercase keys to match likely fetch_all behavior
+                            servername = row.get('server_name', '').strip().lower() if row.get('server_name') else None
+                            oraclesid = row.get('oracle_sid', '').strip().lower() if row.get('oracle_sid') else None
+                            dbname = row.get('database_name', '').strip() if row.get('database_name') else None
+
+                            # Resolve foreign keys using the cache
+                            server_id = server_cache.get(servername) if servername else None
+                            sid_id = sid_cache.get((server_id, oraclesid)) if server_id and oraclesid else None
+                            db_id = db_cache.get((server_id, oraclesid, dbname)) if server_id and oraclesid and dbname else None
+
+                            # Skip rows with unresolved foreign keys
+                            if not server_id or not sid_id or not db_id:
+                                print(f"Skipping row: servername={servername}, oraclesid={oraclesid}, dbname={dbname}")
+                                continue
+
+                            # Insert data into PostgreSQL TBMONITORWORKLOAD table
+                            pg_cursor.execute("""
+                                INSERT INTO TBMONITORWORKLOAD (
+                                    DATE_COLLECTE, ServerId, OracleSIDId, DatabaseId,
+                                    CPU_USAGE, IO_WAIT, NETWORK_WAIT, LATCH_WAIT, CPU_WAIT,
+                                    MEMORY_WAIT, LOCK_WAIT, LOG_WAIT, REMOTE_WAIT, OTHER_WAIT,
+                                    LSOS_HOST, CONCURRENCY_WAIT, SYSTEM_IO_WAIT, USER_COMMITS,
+                                    USER_ROLLBACKS, PHYSICAL_READS, PHYSICAL_WRITES, LOGICAL_READS,
+                                    ACTIVE_SESSIONS, DB_CPU_TIME, DB_WAIT_TIME
+                                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                        %s, %s, %s, %s, %s, %s, %s)
+                            """, (
+                                row['date_collecte'], server_id, sid_id, db_id,
+                                row['cpu_usage'], row['io_wait'], row['network_wait'], row['latch_wait'], row['cpu_wait'],
+                                row['memory_wait'], row['lock_wait'], row['log_wait'], row['remote_wait'], row['other_wait'],
+                                row['lsos_host'], row['concurrency_wait'], row['system_io_wait'], row['user_commits'],
+                                row['user_rollbacks'], row['physical_reads'], row['physical_writes'], row['logical_reads'],
+                                row['active_sessions'], row['db_cpu_time'], row['db_wait_time']
+                            ))
+
+                        # Commit the transaction after all inserts
+                        pg_conn.commit()
+            except Exception as e:
+                print(f"❌ Error processing Oracle {conn_info['host']} - {e}")
+
+
+
+
+

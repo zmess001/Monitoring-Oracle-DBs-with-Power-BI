@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  oracle:
+    image: container-registry.oracle.com/database/free
+    container_name: oracle_db
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD}
+      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET}
+    ports:
+      - "${HOST_PORT}:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - C:/scripts:/opt/oracle/scripts  # 👈 Mount Windows C:\scripts folder
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "sys/${ORACLE_PWD}@ORCLCDB", "as", "sysdba", "@healthcheck.sql"]
+      interval: 30s
+      timeout: 10s  
+      retries: 5
+      start_period: 300s
+    shm_size: 2g
+    networks:
+      - oracle_network
+
+volumes:
+  oracle_data:
+    name: oracle_data
+
+networks:
+  oracle_network:
+    driver: bridge
+
+    
+    #docker-compose up -d  #starts the container in detached mode
+    #docker-compose down  # Stops the container
+    #docker exec -it oracle-db bash
+    #docker restart oracle_db 
+# volumes:
+    #   - /c/scripts:/opt/oracle/oradata

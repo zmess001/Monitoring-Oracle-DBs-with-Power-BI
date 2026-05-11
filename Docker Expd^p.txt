@@ -1,0 +1,75 @@
+docker-compose up -d
+
+docker exec -it oracle-db bash
+
+docker exec -it oracle_db bash
+
+ls -l /home/oracle
+
+ls /home/oracle/3387218F0CE207F9E0630800580A0B6F
+
+ls -l /opt/oracle/admin/dump
+
+ls -l /home/oracle/admin/dump
+
+ls -l /home/oracle/admin/
+
+pwd
+
+impdp user1/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=backup.dmp schemas=mydbuser TABLE_EXISTS_ACTION=REPLACE
+
+impdp mydbuser/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=backup.dmp TABLE_EXISTS_ACTION=REPLACE
+
+sqlplus / as sysdba
+
+SELECT * FROM dba_directories WHERE directory_name = 'DATA_PUMP_DIR';
+
+exit
+
+impdp user1/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=3387218F0CE207F9E0630800580A0B6F/backup.dmp schemas=mydbuser TABLE_EXISTS_ACTION=REPLACE
+
+docker-compose down
+
+docker exec -it oracle_db bash
+
+sqlplus sys/OraclePass123@FREEPDB1
+
+sqlplus sys/OraclePass123@FREEPDB1 as sysdba
+
+DROP USER user1 CASCADE;
+
+docker restart dockeroracledb
+
+docker restart oracle_db
+
+impdp mydbuser/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=backup.dmp TABLE_EXISTS_ACTION=REPLACE
+
+impdp mydbuser/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=BACKUP.DMP TABLE_EXISTS_ACTION=REPLACE
+
+docker exec -it oracle_db sqlplus mydbuser/OraclePass123@FREEPDB1
+
+SELECT directory_name, directory_pathFROM dba_directoriesWHERE directory_name = 'DATA_PUMP_DIR';
+
+SELECT directory_name, directory_path FROM dba_dir 2 ectories WHERE directory_name = 'DATA_PUMP_DIR';
+
+docker exec -it oracle_db sqlplus sys/OraclePass123@FREE
+
+docker exec -it oracle_db sqlplus sys/OraclePass123@FREE as sysdba
+
+SELECT directory_name, directory_path FROM dba_directories WHERE directory_name = 'DATA_PUMP_DIR';
+
+docker exec -it oracle_db bash
+
+impdp mydbuser/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=BACKUP.DMP TABLE_EXISTS_ACTION=REPLACE
+
+ls -l /home/oracle/3387218F0CE207F9E0630800580A0B6F/BACKUP.DMP
+
+docker cp BACKUP.dmp oracle_db:/home/oracle/BACKUP.DMP
+
+docker cp BACKUP.dmp oracle_db:/home/oracle/3387218F0CE207F9E0630800580A0B6F/BACKUP.DMP
+
+ls -l /home/oracle/3387218F0CE207F9E0630800580A0B6F
+
+ls -l /home/oracle
+
+impdp mydbuser/OraclePass123@FREEPDB1 directory=DATA_PUMP_DIR dumpfile=BACKUP.DMP TABLE_EXISTS_ACTION=REPLACE

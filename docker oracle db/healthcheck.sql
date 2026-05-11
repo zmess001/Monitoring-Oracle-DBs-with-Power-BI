@@ -1,0 +1,2 @@
+SELECT 'OK' FROM dual;
+EXIT;
